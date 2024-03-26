@@ -1,9 +1,8 @@
-import { createElement, CSSProperties, ReactElement, useCallback, useEffect, useRef, useState } from "react";
+import { createElement, CSSProperties, ReactElement, useCallback, useEffect, useState } from "react";
 import { FilterSelector } from "@mendix/pluggable-widgets-commons/components/web";
 
 import { DefaultFilterEnum } from "../../typings/DatagridDateFilterProps";
 
-import DatePickerComponent from "react-datepicker";
 import { DatePicker, RangeDateValue } from "./DatePicker";
 import classNames from "classnames";
 
@@ -31,7 +30,6 @@ export function FilterComponent(props: FilterComponentProps): ReactElement {
     const [type, setType] = useState<DefaultFilterEnum>(props.defaultFilter);
     const [value, setValue] = useState<Date | undefined>(props.defaultValue);
     const [rangeValues, setRangeValues] = useState<RangeDateValue>([props.defaultStartDate, props.defaultEndDate]);
-    const pickerRef = useRef<DatePickerComponent | null>(null);
 
     useEffect(() => {
         setValue(prev => {
@@ -53,12 +51,6 @@ export function FilterComponent(props: FilterComponentProps): ReactElement {
         props.updateFilters?.(value, rangeValues, type);
     }, [value, rangeValues, type]);
 
-    const focusInput = useCallback(() => {
-        if (pickerRef.current) {
-            pickerRef.current.setFocus();
-        }
-    }, [pickerRef.current]);
-
     return (
         <div
             className={classNames("filter-container", props.className)}
@@ -70,29 +62,25 @@ export function FilterComponent(props: FilterComponentProps): ReactElement {
                     ariaLabel={props.screenReaderButtonCaption}
                     defaultFilter={props.defaultFilter}
                     id={props.id}
-                    onChange={useCallback(
-                        type => {
-                            setType(prev => {
-                                if (prev === type) {
-                                    return prev;
-                                }
-                                focusInput();
-                                return type;
-                            });
-                        },
-                        [focusInput]
-                    )}
+                    onChange={useCallback(type => {
+                        setType(prev => {
+                            if (prev === type) {
+                                return prev;
+                            }
+                            return type;
+                        });
+                    }, [])}
                     options={
                         [
-                            { value: "between", label: "Between" },
-                            { value: "greater", label: "Greater than" },
-                            { value: "greaterEqual", label: "Greater than or equal" },
-                            { value: "equal", label: "Equal" },
-                            { value: "notEqual", label: "Not equal" },
-                            { value: "smaller", label: "Smaller than" },
-                            { value: "smallerEqual", label: "Smaller than or equal" },
-                            { value: "empty", label: "Empty" },
-                            { value: "notEmpty", label: "Not empty" }
+                            { value: "between", label: "介于之间" },
+                            { value: "greater", label: "大于" },
+                            { value: "greaterEqual", label: "大于或等于" },
+                            { value: "equal", label: "等于" },
+                            { value: "notEqual", label: "不等于" },
+                            { value: "smaller", label: "小于" },
+                            { value: "smallerEqual", label: "小于或等于" },
+                            { value: "empty", label: "为空" },
+                            { value: "notEmpty", label: "非空" }
                         ] as Array<{ value: DefaultFilterEnum; label: string }>
                     }
                 />
@@ -107,7 +95,6 @@ export function FilterComponent(props: FilterComponentProps): ReactElement {
                 id={props.id}
                 placeholder={props.placeholder}
                 rangeValues={rangeValues}
-                ref={pickerRef}
                 screenReaderCalendarCaption={props.screenReaderCalendarCaption}
                 screenReaderInputCaption={props.screenReaderInputCaption}
                 setRangeValues={setRangeValues}

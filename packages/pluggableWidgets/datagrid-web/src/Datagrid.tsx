@@ -22,9 +22,6 @@ export default function Datagrid(props: DatagridContainerProps): ReactElement {
 
     const [sortParameters, setSortParameters] = useState<{ columnIndex: number; desc: boolean } | undefined>(undefined);
     const isInfiniteLoad = props.pagination === "virtualScrolling";
-    const currentPage = isInfiniteLoad
-        ? props.datasource.limit / props.pageSize
-        : props.datasource.offset / props.pageSize;
     const viewStateFilters = useRef<FilterCondition | undefined>(undefined);
     const [filtered, setFiltered] = useState(false);
     const multipleFilteringState = useMultipleFiltering();
@@ -52,13 +49,19 @@ export default function Datagrid(props: DatagridContainerProps): ReactElement {
         }
     }, [props.datasource, props.refreshInterval]);
 
+    const [currentPage, setCurrentPage] = useState(() =>
+        isInfiniteLoad ? props.datasource.limit / props.pageSize : props.datasource.offset / props.pageSize
+    );
+
     const setPage = useCallback(
-        computePage => {
+        (computePage, pageSize) => {
             const newPage = computePage(currentPage);
+            setCurrentPage(newPage);
             if (isInfiniteLoad) {
-                props.datasource.setLimit(newPage * props.pageSize);
+                props.datasource.setLimit(newPage * (pageSize ?? props.pageSize));
             } else {
-                props.datasource.setOffset(newPage * props.pageSize);
+                props.datasource.setOffset(newPage * (pageSize ?? props.pageSize));
+                props.datasource.setLimit(pageSize ?? props.pageSize);
             }
         },
         [props.datasource, props.pageSize, isInfiniteLoad, currentPage]

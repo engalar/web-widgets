@@ -16,7 +16,11 @@ import classNames from "classnames";
 import { EditableValue, ObjectItem } from "mendix";
 import { SortingRule, useSettings } from "../features/settings";
 import { ColumnResizer } from "./ColumnResizer";
-import { InfiniteBody, Pagination, ThreeStateCheckBox } from "@mendix/pluggable-widgets-commons/components/web";
+import {
+    InfiniteBody,
+    AntPagination as Pagination,
+    ThreeStateCheckBox
+} from "@mendix/pluggable-widgets-commons/components/web";
 import { MultiSelectionStatus } from "@mendix/pluggable-widgets-commons";
 import { SelectionMethod } from "../features/selection";
 
@@ -64,7 +68,7 @@ export interface TableProps<T extends ObjectItem> {
     pagingPosition: string;
     preview?: boolean;
     rowClass?: (value: T) => string;
-    setPage?: (computePage: (prevPage: number) => number) => void;
+    setPage?: (computePage: (prevPage: number) => number, pageSize?: number) => void;
     setSortParameters?: (sort?: { columnIndex: number; desc: boolean }) => void;
     settings?: EditableValue<string>;
     styles?: CSSProperties;
@@ -249,12 +253,12 @@ export function Table<T extends ObjectItem>(props: TableProps<T>): ReactElement 
         <Pagination
             canNextPage={hasMoreItems}
             canPreviousPage={page !== 0}
-            gotoPage={(page: number) => setPage && setPage(() => page)}
-            nextPage={() => setPage && setPage(prev => prev + 1)}
+            gotoPage={(page: number, pageSize: number) => setPage && setPage(() => page, pageSize)}
+            nextPage={() => setPage && setPage(prev => prev + 1, pageSize)}
             numberOfItems={numberOfItems}
             page={page}
             pageSize={pageSize}
-            previousPage={() => setPage && setPage(prev => prev - 1)}
+            previousPage={() => setPage && setPage(prev => prev - 1, pageSize)}
         />
     ) : null;
 
