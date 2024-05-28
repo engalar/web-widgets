@@ -10,7 +10,9 @@
     "url": "https://github.com/mendix/web-widgets.git"
   },
   "license": "Apache-2.0",
-  "config": {},
+  "config": {
+    "projectPath": "D:/Users/eg/Desktop/tmp3"
+  },
   "mxpackage": {
     "name": "Datagrid",
     "type": "widget",
@@ -26,6 +28,7 @@
   },
   "packagePath": "com.mendix.widget.web",
   "scripts": {
+    "vite": "vite",
     "start": "pluggable-widgets-tools start:server",
     "dev": "pluggable-widgets-tools start:ts",
     "build": "pluggable-widgets-tools build:ts",
@@ -45,6 +48,8 @@
     "deep-equal": "^2.2.0"
   },
   "devDependencies": {
+    "@engalar/vite-plugin-mendix": "^1.2.3",
+    "vite": "^5.2.11",
     "@mendix-internal/automation-utils": "workspace:*",
     "@mendix/eslint-config-web-widgets": "workspace:*",
     "@mendix/pluggable-test-utils": "workspace:*",
