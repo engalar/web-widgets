@@ -25,7 +25,7 @@ export function InfiniteBody(props: PropsWithChildren<InfiniteBodyProps>): React
     const containerRef = useRef<HTMLDivElement>(null);
 
     const trackScrolling = useCallback(
-        //@ts-ignore
+        // @ts-ignore
         e => {
             /**
              * In Windows OS the result of first expression returns a non integer and result in never loading more, require floor to solve.

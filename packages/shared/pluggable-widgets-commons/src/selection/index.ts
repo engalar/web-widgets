@@ -1,9 +1,9 @@
 import type { ActionValue, ListValue, ObjectItem, SelectionSingleValue, SelectionMultiValue } from "mendix";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 class SingleSelectionHelper {
     type = "Single" as const;
-    constructor(private selectionValue: SelectionSingleValue) {}
+    constructor(public selectionValue: SelectionSingleValue) {}
 
     updateProps(value: SelectionSingleValue): void {
         this.selectionValue = value;
@@ -25,7 +25,7 @@ class SingleSelectionHelper {
 
 class MultiSelectionHelper {
     type = "Multi" as const;
-    constructor(private selectionValue: SelectionMultiValue, private selectableItems: ObjectItem[]) {}
+    constructor(public selectionValue: SelectionMultiValue, public selectableItems: ObjectItem[]) {}
 
     isSelected(value: ObjectItem): boolean {
         return this.selectionValue.selection.some(obj => obj.id === value.id);
@@ -67,21 +67,11 @@ class MultiSelectionHelper {
     }
 }
 
-function usePrevious(value: SelectionSingleValue | SelectionMultiValue | undefined) {
-    const ref = useRef<SelectionSingleValue | SelectionMultiValue | undefined>();
-
-    useEffect(() => {
-        ref.current = value;
-    }, [value]);
-
-    return ref.current;
-}
-
 export function useSelectionHelper(
     selection: SelectionSingleValue | SelectionMultiValue | undefined,
     dataSource: ListValue,
     onSelectionChange: ActionValue | undefined
-): { selectionHelper: SelectionHelper | undefined; reset: () => void } | undefined {
+): { selectionHelper: SelectionHelper | undefined; reset: () => void; selectCount: number } | undefined {
     const firstLoadDone = useRef(false);
 
     useEffect(() => {
@@ -96,34 +86,38 @@ export function useSelectionHelper(
         }
     }, [dataSource?.status]);
 
-    const prevSelction = usePrevious(selection);
+    const selectionHelper = useRef<SelectionHelper | undefined>(undefined);
+    // use selectCount
+    const [selectCount, setSelectCount] = useState(0);
 
     useEffect(() => {
-        if (selection?.type == "Single" && prevSelction?.type == "Single") {
-            selection.setSelection(prevSelction.selection);
-        }
-        if (selection?.type == "Multi" && prevSelction?.type == "Multi") {
-            selection.setSelection(prevSelction.selection);
-        }
-    }, [prevSelction, selection]);
-
-    const selectionHelper = useRef<SelectionHelper | undefined>(undefined);
-
-    if (selection !== undefined) {
-        if (selection.type === "Single") {
-            if (!selectionHelper.current) {
-                selectionHelper.current = new SingleSelectionHelper(selection);
+        if (selection !== undefined) {
+            if (selection.type === "Single") {
+                if (!selectionHelper.current) {
+                    selectionHelper.current = new SingleSelectionHelper(selection);
+                } else {
+                    (selectionHelper.current as SingleSelectionHelper).updateProps(selection);
+                }
             } else {
-                (selectionHelper.current as SingleSelectionHelper).updateProps(selection);
-            }
-        } else {
-            if (!selectionHelper.current) {
-                selectionHelper.current = new MultiSelectionHelper(selection, dataSource.items ?? []);
-            } else {
-                (selectionHelper.current as MultiSelectionHelper).updateProps(selection, dataSource.items ?? []);
+                if (!selectionHelper.current) {
+                    selectionHelper.current = new MultiSelectionHelper(selection, dataSource.items ?? []);
+                } else {
+                    const preSelection = (selectionHelper.current as MultiSelectionHelper).selectionValue;
+
+                    // switch page lead to selction reset, so need to restore the pre selection into new selection. But change selection will run into dead loop
+                    if (preSelection.selection.length > 0 && selection.selection.length === 0) {
+                        // Fixme: Maybe due to the mendix client api limitation, we can't select a item which not in the current page.
+                        selection.setSelection(preSelection.selection);
+                    }
+                    (selectionHelper.current as MultiSelectionHelper).updateProps(
+                        selection,
+                        concatItems((selectionHelper.current as MultiSelectionHelper).selectableItems, dataSource.items)
+                    );
+                    setSelectCount(selection.selection.length);
+                }
             }
         }
-    }
+    }, [selection, dataSource?.items]);
 
     const reset = useCallback(() => {
         if (selectionHelper.current) {
@@ -135,10 +129,21 @@ export function useSelectionHelper(
         }
     }, []);
 
-    return { selectionHelper: selectionHelper.current, reset };
+    return { selectionHelper: selectionHelper.current, reset, selectCount };
 }
 
 export type { SingleSelectionHelper };
 export type { MultiSelectionHelper };
 export type SelectionHelper = SingleSelectionHelper | MultiSelectionHelper;
 export type MultiSelectionStatus = "none" | "all" | "some";
+function concatItems(preItems: ObjectItem[] | undefined, items: ObjectItem[] | undefined): ObjectItem[] {
+    if (preItems && items) {
+        const mergedItems = preItems.concat(items);
+        const mergedMap = mergedItems.reduce((acc, cur) => {
+            acc[cur.id] = cur;
+            return acc;
+        }, {} as { [key: string]: ObjectItem });
+        return Object.values(mergedMap);
+    }
+    return preItems || items || [];
+}

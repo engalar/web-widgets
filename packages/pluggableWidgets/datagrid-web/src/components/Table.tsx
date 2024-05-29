@@ -45,6 +45,7 @@ export type CellRenderer<T extends ObjectItem = ObjectItem> = (
 ) => ReactElement;
 
 export interface TableProps<T extends ObjectItem> {
+    selectCount: number;
     cellRenderer: CellRenderer<T>;
     className: string;
     columns: TableColumn[];
@@ -100,6 +101,7 @@ export interface ColumnProperty {
 
 export function Table<T extends ObjectItem>(props: TableProps<T>): ReactElement {
     const {
+        selectCount,
         cellRenderer,
         className,
         columns,
@@ -305,6 +307,11 @@ export function Table<T extends ObjectItem>(props: TableProps<T>): ReactElement 
                             >
                                 {selectionStatus && (
                                     <ThreeStateCheckBox value={selectionStatus} onChange={props.onSelectAll} />
+                                )}
+                                {selectCount === 0 ? null : (
+                                    <span className="select-count" style={{ whiteSpace: "nowrap", paddingLeft: "6px" }}>
+                                        {selectCount} 项
+                                    </span>
                                 )}
                             </div>
                         )}

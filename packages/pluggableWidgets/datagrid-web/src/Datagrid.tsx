@@ -16,6 +16,8 @@ import { useCellRenderer } from "./features/cell";
 import { getColumnAssociationProps, isSortable } from "./features/column";
 import { selectionSettings, useOnSelectProps } from "./features/selection";
 import "./ui/Datagrid.scss";
+import { MultiSelectionHelper } from "@mendix/pluggable-widgets-commons";
+import { SelectionMultiValue } from "mendix";
 
 export default function Datagrid(props: DatagridContainerProps): ReactElement {
     const id = useRef(`DataGrid${generateUUID()}`);
@@ -129,6 +131,7 @@ export default function Datagrid(props: DatagridContainerProps): ReactElement {
 
     return (
         <Table
+            selectCount={sh.selectCount}
             selectionStatus={selectionStatus || "none"}
             selectionMethod={selectionMethod || "none"}
             cellRenderer={cellRenderer}
