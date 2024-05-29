@@ -1,5 +1,5 @@
 import type { ActionValue, ListValue, ObjectItem, SelectionSingleValue, SelectionMultiValue } from "mendix";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 class SingleSelectionHelper {
     type = "Single" as const;
@@ -16,6 +16,9 @@ class SingleSelectionHelper {
         this.selectionValue.setSelection(value);
     }
     remove(_value: ObjectItem): void {
+        this.selectionValue.setSelection(undefined);
+    }
+    reset(): void {
         this.selectionValue.setSelection(undefined);
     }
 }
@@ -59,24 +62,50 @@ class MultiSelectionHelper {
     selectNone(): void {
         this.selectionValue.setSelection([]);
     }
+    reset(): void {
+        this.selectionValue.setSelection([]);
+    }
+}
+
+function usePrevious(value: SelectionSingleValue | SelectionMultiValue | undefined) {
+    const ref = useRef<SelectionSingleValue | SelectionMultiValue | undefined>();
+
+    useEffect(() => {
+        ref.current = value;
+    }, [value]);
+
+    return ref.current;
 }
 
 export function useSelectionHelper(
     selection: SelectionSingleValue | SelectionMultiValue | undefined,
     dataSource: ListValue,
     onSelectionChange: ActionValue | undefined
-): SelectionHelper | undefined {
+): { selectionHelper: SelectionHelper | undefined; reset: () => void } | undefined {
     const firstLoadDone = useRef(false);
+
     useEffect(() => {
         if (firstLoadDone.current) {
             onSelectionChange?.execute();
         }
     }, [selection?.selection]);
+
     useEffect(() => {
         if (dataSource?.status !== "loading") {
             firstLoadDone.current = true;
         }
     }, [dataSource?.status]);
+
+    const prevSelction = usePrevious(selection);
+
+    useEffect(() => {
+        if (selection?.type == "Single" && prevSelction?.type == "Single") {
+            selection.setSelection(prevSelction.selection);
+        }
+        if (selection?.type == "Multi" && prevSelction?.type == "Multi") {
+            selection.setSelection(prevSelction.selection);
+        }
+    }, [prevSelction, selection]);
 
     const selectionHelper = useRef<SelectionHelper | undefined>(undefined);
 
@@ -96,7 +125,17 @@ export function useSelectionHelper(
         }
     }
 
-    return selectionHelper.current;
+    const reset = useCallback(() => {
+        if (selectionHelper.current) {
+            if (selectionHelper.current instanceof SingleSelectionHelper) {
+                selectionHelper.current.reset();
+            } else if (selectionHelper.current instanceof MultiSelectionHelper) {
+                selectionHelper.current.reset();
+            }
+        }
+    }, []);
+
+    return { selectionHelper: selectionHelper.current, reset };
 }
 
 export type { SingleSelectionHelper };

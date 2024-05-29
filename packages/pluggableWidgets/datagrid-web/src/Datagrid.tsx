@@ -119,14 +119,18 @@ export default function Datagrid(props: DatagridContainerProps): ReactElement {
         [props.filterList]
     );
 
-    const selection = useSelectionHelper(props.itemSelection, props.datasource, props.onSelectionChange);
-    const selectActionProps = useOnSelectProps(selection);
-    const { selectionStatus, selectionMethod } = selectionSettings(props, selection);
+    const sh = useSelectionHelper(props.itemSelection, props.datasource, props.onSelectionChange);
+    const selectActionProps = sh
+        ? useOnSelectProps(sh.selectionHelper)
+        : { onSelect: () => {}, onSelectAll: () => {}, isSelected: () => false };
+    const { selectionStatus, selectionMethod } = sh
+        ? selectionSettings(props, sh.selectionHelper)
+        : { selectionStatus: undefined, selectionMethod: undefined };
 
     return (
         <Table
-            selectionStatus={selectionStatus}
-            selectionMethod={selectionMethod}
+            selectionStatus={selectionStatus || "none"}
+            selectionMethod={selectionMethod || "none"}
             cellRenderer={cellRenderer}
             className={props.class}
             columns={columns}
