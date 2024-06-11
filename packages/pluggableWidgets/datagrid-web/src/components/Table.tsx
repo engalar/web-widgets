@@ -248,6 +248,16 @@ export function Table<T extends ObjectItem>(props: TableProps<T>): ReactElement 
     );
 
     const rows = useMemo(() => data.map(item => ({ item })), [data]);
+    const className2 = props.className || "";
+    let pattern = /mx-name-(\w+)/;
+    let match = className2.match(pattern);
+    let extracted;
+    if (match) {
+        extracted = match[1];
+        console.log(extracted);
+    } else {
+        console.error("No match found");
+    }
 
     const pagination = paging ? (
         <Pagination

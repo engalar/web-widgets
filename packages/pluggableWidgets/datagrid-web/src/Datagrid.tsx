@@ -1,4 +1,5 @@
 import { createElement, ReactElement, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useLocalStorageState } from "ahooks";
 import { ColumnsType, DatagridContainerProps } from "../typings/DatagridProps";
 import { FilterCondition } from "mendix/filters";
 import { and } from "mendix/filters/builders";
@@ -16,6 +17,20 @@ import { useCellRenderer } from "./features/cell";
 import { getColumnAssociationProps, isSortable } from "./features/column";
 import { selectionSettings, useOnSelectProps } from "./features/selection";
 import "./ui/Datagrid.scss";
+
+function getIdFromClass(clazz: string) {
+    const className2 = clazz || "";
+    let pattern = /mx-name-(\w+)/;
+    let match = className2.match(pattern);
+    let extracted;
+    if (match) {
+        extracted = match[1];
+        console.log(extracted);
+    } else {
+        console.error("No match found");
+    }
+    return extracted;
+}
 
 export default function Datagrid(props: DatagridContainerProps): ReactElement {
     const id = useRef(`DataGrid${generateUUID()}`);
@@ -49,22 +64,28 @@ export default function Datagrid(props: DatagridContainerProps): ReactElement {
         }
     }, [props.datasource, props.refreshInterval]);
 
+    const [pageSize, setPageSize] = useLocalStorageState(`DataGrid2-${getIdFromClass(props.class)}-pageSize`, {
+        defaultValue: props.pageSize,
+        listenStorageChange: true
+    });
     const [currentPage, setCurrentPage] = useState(() =>
-        isInfiniteLoad ? props.datasource.limit / props.pageSize : props.datasource.offset / props.pageSize
+        isInfiniteLoad ? props.datasource.limit / pageSize! : props.datasource.offset / pageSize!
     );
 
     const setPage = useCallback(
-        (computePage, pageSize) => {
+        (computePage, pageSize2) => {
             const newPage = computePage(currentPage);
+            setPageSize(pageSize2);
+
             setCurrentPage(newPage);
             if (isInfiniteLoad) {
-                props.datasource.setLimit(newPage * (pageSize ?? props.pageSize));
+                props.datasource.setLimit(newPage * (pageSize2 ?? pageSize));
             } else {
-                props.datasource.setOffset(newPage * (pageSize ?? props.pageSize));
-                props.datasource.setLimit(pageSize ?? props.pageSize);
+                props.datasource.setOffset(newPage * (pageSize2 ?? pageSize));
+                props.datasource.setLimit(pageSize2 ?? pageSize);
             }
         },
-        [props.datasource, props.pageSize, isInfiniteLoad, currentPage]
+        [props.datasource, pageSize, isInfiniteLoad, currentPage, setPageSize]
     );
 
     // TODO: Rewrite this logic with single useReducer (or write
@@ -199,7 +220,7 @@ export default function Datagrid(props: DatagridContainerProps): ReactElement {
             id={id.current}
             numberOfItems={props.datasource.totalCount}
             page={currentPage}
-            pageSize={props.pageSize}
+            pageSize={pageSize!}
             paging={props.pagination === "buttons"}
             pagingPosition={props.pagingPosition}
             rowClass={useCallback(value => props.rowClass?.get(value)?.value ?? "", [props.rowClass])}

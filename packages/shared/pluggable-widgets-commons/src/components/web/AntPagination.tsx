@@ -1,5 +1,5 @@
 import { Pagination } from "antd";
-import { createElement, ReactElement, useCallback, useState } from "react";
+import { createElement, ReactElement, useCallback } from "react";
 
 import "antd/es/pagination/style/css";
 
@@ -15,18 +15,11 @@ export interface AntPaginationProps {
 }
 
 export function AntPagination(props: AntPaginationProps): ReactElement | null {
-    const [previousPageSize, setPreviousPageSize] = useState(props.pageSize);
-
     const onChange = useCallback(
         (page: number, pageSize: number): void => {
-            if (previousPageSize !== pageSize) {
-                props.gotoPage(0, pageSize);
-                setPreviousPageSize(pageSize);
-            } else {
-                props.gotoPage(page - 1, pageSize);
-            }
+            props.gotoPage(page - 1, pageSize);
         },
-        [previousPageSize]
+        [props.gotoPage]
     );
     const numberOfPages =
         props.numberOfItems !== undefined ? Math.ceil(props.numberOfItems / props.pageSize) : undefined;
@@ -58,7 +51,7 @@ export function AntPagination(props: AntPaginationProps): ReactElement | null {
                 current={props.page + 1}
                 total={props.numberOfItems ?? (numberOfPages ?? 1) * props.pageSize}
                 showTotal={(total, _range) => `共 ${total} 项`}
-                pageSize={previousPageSize}
+                pageSize={props.pageSize}
                 onChange={onChange}
             />
         </div>
