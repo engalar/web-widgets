@@ -57,7 +57,7 @@ export function AntPagination(props: AntPaginationProps): ReactElement | null {
                 pageSizeOptions={[5, 10, 20, 50, 100]}
                 current={props.page + 1}
                 total={props.numberOfItems ?? (numberOfPages ?? 1) * props.pageSize}
-                showTotal={(total, range) => `${range[0]}-${range[1]} 共 ${total} 项`}
+                showTotal={(total, _range) => `共 ${total} 项`}
                 pageSize={previousPageSize}
                 onChange={onChange}
             />
