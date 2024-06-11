@@ -43,12 +43,16 @@ export default function Datagrid(props: DatagridContainerProps): ReactElement {
     const { FilterContext } = useFilterContext();
     const cellRenderer = useCellRenderer({ columns: props.columns, onClick: props.onClick });
 
+    const [pageSize, setPageSize] = useLocalStorageState(`DataGrid2-${getIdFromClass(props.class)}-pageSize`, {
+        defaultValue: props.pageSize,
+        listenStorageChange: true
+    });
     useEffect(() => {
         props.datasource.requestTotalCount(true);
         if (props.datasource.limit === Number.POSITIVE_INFINITY) {
-            props.datasource.setLimit(props.pageSize);
+            props.datasource.setLimit(pageSize);
         }
-    }, [props.datasource, props.pageSize]);
+    }, [props.datasource, pageSize]);
 
     useEffect(() => {
         if (props.datasource.filter && !filtered && !viewStateFilters.current) {
@@ -64,10 +68,6 @@ export default function Datagrid(props: DatagridContainerProps): ReactElement {
         }
     }, [props.datasource, props.refreshInterval]);
 
-    const [pageSize, setPageSize] = useLocalStorageState(`DataGrid2-${getIdFromClass(props.class)}-pageSize`, {
-        defaultValue: props.pageSize,
-        listenStorageChange: true
-    });
     const [currentPage, setCurrentPage] = useState(() =>
         isInfiniteLoad ? props.datasource.limit / pageSize! : props.datasource.offset / pageSize!
     );
