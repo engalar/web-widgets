@@ -1,4 +1,11 @@
-import type { ActionValue, ListValue, ObjectItem, SelectionSingleValue, SelectionMultiValue } from "mendix";
+import type {
+    ActionValue,
+    ListValue,
+    ObjectItem,
+    SelectionSingleValue,
+    SelectionMultiValue,
+    ListActionValue
+} from "mendix";
 import { useEffect, useRef } from "react";
 
 class SingleSelectionHelper {
@@ -22,7 +29,14 @@ class SingleSelectionHelper {
 
 class MultiSelectionHelper {
     type = "Multi" as const;
-    constructor(private selectionValue: SelectionMultiValue, private selectableItems: ObjectItem[]) {}
+    mergeSelectedItems: Map<string, ObjectItem> = new Map();
+    previousSelectableItems: ObjectItem[] = [];
+    constructor(
+        private selectionValue: SelectionMultiValue,
+        private selectableItems: ObjectItem[],
+        private onDoSelect: ListActionValue | undefined,
+        private onUnSelect: ListActionValue | undefined
+    ) {}
 
     isSelected(value: ObjectItem): boolean {
         return this.selectionValue.selection.some(obj => obj.id === value.id);
@@ -31,6 +45,15 @@ class MultiSelectionHelper {
     updateProps(value: SelectionMultiValue, items: ObjectItem[]): void {
         this.selectionValue = value;
         this.selectableItems = items;
+        // is items different from previous selectable items? by length and content?
+        if (
+            this.previousSelectableItems.length !== this.selectableItems.length ||
+            this.previousSelectableItems.some(item => !this.selectableItems.some(obj => obj.id === item.id))
+        ) {
+            // page changed, restore selection, by selectableItems intersection with mergeSelectedItems
+            this.selectionValue.setSelection(this.selectableItems.filter(item => this.mergeSelectedItems.has(item.id)));
+            this.previousSelectableItems = this.selectableItems;
+        }
     }
 
     get selectionStatus(): MultiSelectionStatus {
@@ -43,13 +66,17 @@ class MultiSelectionHelper {
 
     add(value: ObjectItem): void {
         if (!this.isSelected(value)) {
+            this.mergeSelectedItems.set(value.id, value);
             this.selectionValue.setSelection(this.selectionValue.selection.concat(value));
+            this.onDoSelect?.get(value).execute();
         }
     }
 
     remove(value: ObjectItem): void {
         if (this.isSelected(value)) {
+            this.mergeSelectedItems.delete(value.id);
             this.selectionValue.setSelection(this.selectionValue.selection.filter(obj => obj.id !== value.id));
+            this.onUnSelect?.get(value).execute();
         }
     }
 
@@ -64,7 +91,9 @@ class MultiSelectionHelper {
 export function useSelectionHelper(
     selection: SelectionSingleValue | SelectionMultiValue | undefined,
     dataSource: ListValue,
-    onSelectionChange: ActionValue | undefined
+    onSelectionChange: ActionValue | undefined,
+    onDoSelect: ListActionValue | undefined,
+    onUnSelect: ListActionValue | undefined
 ): SelectionHelper | undefined {
     const firstLoadDone = useRef(false);
     useEffect(() => {
@@ -89,7 +118,12 @@ export function useSelectionHelper(
             }
         } else {
             if (!selectionHelper.current) {
-                selectionHelper.current = new MultiSelectionHelper(selection, dataSource.items ?? []);
+                selectionHelper.current = new MultiSelectionHelper(
+                    selection,
+                    dataSource.items ?? [],
+                    onDoSelect,
+                    onUnSelect
+                );
             } else {
                 (selectionHelper.current as MultiSelectionHelper).updateProps(selection, dataSource.items ?? []);
             }

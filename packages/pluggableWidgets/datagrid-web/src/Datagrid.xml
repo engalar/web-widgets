@@ -6,6 +6,16 @@
     <studioCategory>Data Containers</studioCategory>
     <helpUrl>https://docs.mendix.com/appstore/modules/data-grid-2</helpUrl>
     <properties>
+        <propertyGroup caption="NewTrial">
+            <property key="onSelect" type="action" required="false" dataSource="datasource">
+                <caption>On Select</caption>
+                <description />
+            </property>
+            <property key="onUnSelect" type="action" required="false" dataSource="datasource">
+                <caption>On UnSelect</caption>
+                <description />
+            </property>
+        </propertyGroup>
         <propertyGroup caption="General">
             <propertyGroup caption="General">
                 <property key="advanced" type="boolean" defaultValue="false">

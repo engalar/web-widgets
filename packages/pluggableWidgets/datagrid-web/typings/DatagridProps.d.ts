@@ -80,6 +80,8 @@ export interface DatagridContainerProps {
     class: string;
     style?: CSSProperties;
     tabIndex?: number;
+    onSelect?: ListActionValue;
+    onUnSelect?: ListActionValue;
     advanced: boolean;
     datasource: ListValue;
     refreshInterval: number;
@@ -115,6 +117,8 @@ export interface DatagridPreviewProps {
     style: string;
     styleObject?: CSSProperties;
     readOnly: boolean;
+    onSelect: {} | null;
+    onUnSelect: {} | null;
     advanced: boolean;
     datasource: {} | { type: string } | null;
     refreshInterval: number | null;
