@@ -35,16 +35,28 @@ class MultiSelectionHelper {
         private selectionValue: SelectionMultiValue,
         private selectableItems: ObjectItem[],
         private onDoSelect: ListActionValue | undefined,
-        private onUnSelect: ListActionValue | undefined
-    ) {}
+        private onUnSelect: ListActionValue | undefined,
+        private batch?: number
+    ) {
+        if ((onDoSelect === undefined) !== (onUnSelect === undefined)) {
+            throw new Error("onDoSelect and onUnSelect must be both defined or both undefined");
+        }
+    }
 
     isSelected(value: ObjectItem): boolean {
         return this.selectionValue.selection.some(obj => obj.id === value.id);
     }
 
-    updateProps(value: SelectionMultiValue, items: ObjectItem[]): void {
+    updateProps(value: SelectionMultiValue, items: ObjectItem[], batch?: number): void {
         this.selectionValue = value;
         this.selectableItems = items;
+
+        if (this.batch !== batch) {
+            this.mergeSelectedItems.clear();
+            this.selectNone();
+            this.batch = batch;
+            return;
+        }
         // is items different from previous selectable items? by length and content?
         if (
             this.previousSelectableItems.length !== this.selectableItems.length ||
@@ -93,7 +105,8 @@ export function useSelectionHelper(
     dataSource: ListValue,
     onSelectionChange: ActionValue | undefined,
     onDoSelect: ListActionValue | undefined,
-    onUnSelect: ListActionValue | undefined
+    onUnSelect: ListActionValue | undefined,
+    batch?: number
 ): SelectionHelper | undefined {
     const firstLoadDone = useRef(false);
     useEffect(() => {
@@ -122,10 +135,11 @@ export function useSelectionHelper(
                     selection,
                     dataSource.items ?? [],
                     onDoSelect,
-                    onUnSelect
+                    onUnSelect,
+                    batch
                 );
             } else {
-                (selectionHelper.current as MultiSelectionHelper).updateProps(selection, dataSource.items ?? []);
+                (selectionHelper.current as MultiSelectionHelper).updateProps(selection, dataSource.items ?? [], batch);
             }
         }
     }

@@ -7,6 +7,13 @@
     <helpUrl>https://docs.mendix.com/appstore/modules/data-grid-2</helpUrl>
     <properties>
         <propertyGroup caption="NewTrial">
+            <property key="batch" type="attribute" required="false">
+                <caption>Batch</caption>
+                <description>多选时用来重置选中状态，只能递增</description>
+                <attributeTypes>
+                    <attributeType name="Integer" />
+                </attributeTypes>
+            </property>
             <property key="onSelect" type="action" required="false" dataSource="datasource">
                 <caption>On Select</caption>
                 <description />

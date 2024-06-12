@@ -80,6 +80,7 @@ export interface DatagridContainerProps {
     class: string;
     style?: CSSProperties;
     tabIndex?: number;
+    batch?: EditableValue<Big>;
     onSelect?: ListActionValue;
     onUnSelect?: ListActionValue;
     advanced: boolean;
@@ -117,6 +118,7 @@ export interface DatagridPreviewProps {
     style: string;
     styleObject?: CSSProperties;
     readOnly: boolean;
+    batch: string;
     onSelect: {} | null;
     onUnSelect: {} | null;
     advanced: boolean;
