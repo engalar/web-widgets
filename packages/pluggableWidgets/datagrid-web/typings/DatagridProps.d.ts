@@ -80,9 +80,8 @@ export interface DatagridContainerProps {
     class: string;
     style?: CSSProperties;
     tabIndex?: number;
-    batch?: EditableValue<Big>;
-    onSelect?: ListActionValue;
-    onUnSelect?: ListActionValue;
+    newTrialSwitch: boolean;
+    historyVersion?: EditableValue<Big>;
     advanced: boolean;
     datasource: ListValue;
     refreshInterval: number;
@@ -118,9 +117,8 @@ export interface DatagridPreviewProps {
     style: string;
     styleObject?: CSSProperties;
     readOnly: boolean;
-    batch: string;
-    onSelect: {} | null;
-    onUnSelect: {} | null;
+    newTrialSwitch: boolean;
+    historyVersion: string;
     advanced: boolean;
     datasource: {} | { type: string } | null;
     refreshInterval: number | null;

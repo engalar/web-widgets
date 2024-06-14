@@ -17,7 +17,6 @@ import { useCellRenderer } from "./features/cell";
 import { getColumnAssociationProps, isSortable } from "./features/column";
 import { selectionSettings, useOnSelectProps } from "./features/selection";
 import "./ui/Datagrid.scss";
-import { ValueStatus } from "mendix";
 
 function getIdFromClass(clazz: string) {
     const className2 = clazz || "";
@@ -26,7 +25,6 @@ function getIdFromClass(clazz: string) {
     let extracted;
     if (match) {
         extracted = match[1];
-        console.log(extracted);
     } else {
         console.error("No match found");
     }
@@ -145,9 +143,8 @@ export default function Datagrid(props: DatagridContainerProps): ReactElement {
         props.itemSelection,
         props.datasource,
         props.onSelectionChange,
-        props.onSelect,
-        props.onUnSelect,
-        props.batch?.status === ValueStatus.Available ? props.batch.value?.toNumber() : undefined
+        props.newTrialSwitch,
+        props.historyVersion
     );
     const selectActionProps = useOnSelectProps(selection);
     const { selectionStatus, selectionMethod } = selectionSettings(props, selection);

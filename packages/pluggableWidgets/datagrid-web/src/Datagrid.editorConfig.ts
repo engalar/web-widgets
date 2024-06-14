@@ -64,6 +64,9 @@ export function getProperties(
                 "hidable"
             ]);
         }
+        if (!values.newTrialSwitch && platform === "web") {
+            hidePropertyIn(defaultProperties, values, "historyVersion");
+        }
 
         if (!column.filterAssociation) {
             hideNestedPropertiesIn(defaultProperties, values, "columns", index, [

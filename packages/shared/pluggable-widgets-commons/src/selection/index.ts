@@ -1,10 +1,12 @@
-import type {
-    ActionValue,
-    ListValue,
-    ObjectItem,
-    SelectionSingleValue,
-    SelectionMultiValue,
-    ListActionValue
+import Big from "big.js";
+import {
+    type ActionValue,
+    type ListValue,
+    type ObjectItem,
+    type SelectionSingleValue,
+    type SelectionMultiValue,
+    type EditableValue,
+    ValueStatus
 } from "mendix";
 import { useEffect, useRef } from "react";
 
@@ -29,46 +31,50 @@ class SingleSelectionHelper {
 
 class MultiSelectionHelper {
     type = "Multi" as const;
+    /**local cache */
     mergeSelectedItems: Map<string, ObjectItem> = new Map();
-    previousSelectableItems: ObjectItem[] = [];
     constructor(
         private selectionValue: SelectionMultiValue,
+        private onSelectionChange: ActionValue | undefined,
         private selectableItems: ObjectItem[],
-        private onDoSelect: ListActionValue | undefined,
-        private onUnSelect: ListActionValue | undefined,
-        private batch?: number
-    ) {
-        if ((onDoSelect === undefined) !== (onUnSelect === undefined)) {
-            throw new Error("onDoSelect and onUnSelect must be both defined or both undefined");
-        }
-    }
+        private newTrialSwitch: boolean,
+        private historyVersion?: EditableValue<Big>
+    ) {}
 
     isSelected(value: ObjectItem): boolean {
-        return this.selectionValue.selection.some(obj => obj.id === value.id);
+        return this.newTrialSwitch
+            ? this.mergeSelectedItems.has(value.id)
+            : this.selectionValue.selection.some(obj => obj.id === value.id);
     }
 
-    updateProps(value: SelectionMultiValue, items: ObjectItem[], batch?: number): void {
+    updateProps(value: SelectionMultiValue, items: ObjectItem[], historyVersion?: EditableValue<Big>): void {
         this.selectionValue = value;
         this.selectableItems = items;
+        this.historyVersion = historyVersion;
 
-        if (this.batch !== batch) {
-            this.mergeSelectedItems.clear();
-            this.selectNone();
-            this.batch = batch;
+        if (this.newTrialSwitch) {
+            // when enable new trial and historyVersion is 0, clear cross-page selection
+            if (this.historyVersion!.status === ValueStatus.Available && this.historyVersion!.value?.toNumber() === 0) {
+                this.mergeSelectedItems.clear();
+                this.selectNone();
+            }
             return;
-        }
-        // is items different from previous selectable items? by length and content?
-        if (
-            this.previousSelectableItems.length !== this.selectableItems.length ||
-            this.previousSelectableItems.some(item => !this.selectableItems.some(obj => obj.id === item.id))
-        ) {
-            // page changed, restore selection, by selectableItems intersection with mergeSelectedItems
-            this.selectionValue.setSelection(this.selectableItems.filter(item => this.mergeSelectedItems.has(item.id)));
-            this.previousSelectableItems = this.selectableItems;
         }
     }
 
     get selectionStatus(): MultiSelectionStatus {
+        if (this.newTrialSwitch) {
+            // if selectableItems no one in mergeSelectedItems, return none
+            if (this.selectableItems.every(item => !this.mergeSelectedItems.has(item.id))) {
+                return "none";
+            }
+            // if selectableItems all in mergeSelectedItems, return all
+            if (this.selectableItems.every(item => this.mergeSelectedItems.has(item.id))) {
+                return "all";
+            }
+            // if selectableItems some in mergeSelectedItems, return some
+            return "some";
+        }
         return this.selectionValue.selection.length === 0
             ? "none"
             : this.selectionValue.selection.length === this.selectableItems.length
@@ -77,26 +83,77 @@ class MultiSelectionHelper {
     }
 
     add(value: ObjectItem): void {
-        if (!this.isSelected(value)) {
+        if (this.newTrialSwitch) {
             this.mergeSelectedItems.set(value.id, value);
+            // if value less 0 then 0
+            let oldVerion = this.historyVersion!.value?.toNumber() || 0;
+            oldVerion = oldVerion < 0 ? 0 : oldVerion;
+            // notify selection change
+            this.historyVersion!.setValue(Big(oldVerion + 1));
+            this._ensureSelection([value]);
+            return;
+        }
+        if (!this.isSelected(value)) {
             this.selectionValue.setSelection(this.selectionValue.selection.concat(value));
-            this.onDoSelect?.get(value).execute();
         }
     }
 
     remove(value: ObjectItem): void {
-        if (this.isSelected(value)) {
+        if (this.newTrialSwitch) {
             this.mergeSelectedItems.delete(value.id);
+            // if value less 0 then 0
+            let oldVerion = this.historyVersion!.value?.toNumber() || 0;
+            oldVerion = oldVerion > 0 ? 0 : oldVerion;
+            // notify selection change
+            this.historyVersion!.setValue(Big(oldVerion - 1));
+            this._ensureSelection([value]);
+            return;
+        }
+        if (this.isSelected(value)) {
             this.selectionValue.setSelection(this.selectionValue.selection.filter(obj => obj.id !== value.id));
-            this.onUnSelect?.get(value).execute();
         }
     }
 
     selectAll(): void {
+        if (this.newTrialSwitch) {
+            // cross-page selection add page items
+            this.selectableItems.forEach(item => {
+                this.mergeSelectedItems.set(item.id, item);
+            });
+            // if value less 0 then 0
+            let oldVerion = this.historyVersion!.value?.toNumber() || 0;
+            oldVerion = oldVerion < 0 ? 0 : oldVerion;
+            // notify selection change
+            this.historyVersion!.setValue(Big(oldVerion + 1));
+            this._ensureSelection(this.selectableItems);
+            return;
+        }
         this.selectionValue.setSelection(this.selectableItems);
     }
     selectNone(): void {
+        if (this.newTrialSwitch) {
+            // reset page selection
+            this.selectableItems.forEach(item => {
+                this.mergeSelectedItems.delete(item.id);
+            });
+            // if value less 0 then 0
+            let oldVerion = this.historyVersion!.value?.toNumber() || 0;
+            oldVerion = oldVerion > 0 ? 0 : oldVerion;
+            // notify selection change
+            this.historyVersion!.setValue(Big(oldVerion - 1));
+            this._ensureSelection(this.selectableItems);
+            return;
+        }
         this.selectionValue.setSelection([]);
+    }
+    _ensureSelection(value: ObjectItem[]): void {
+        const oldSelection = this.selectionValue.selection;
+        this.selectionValue.setSelection(value);
+        // if selectableItems all in value, return true
+        if (oldSelection.every(item => value.some(obj => obj.id === item.id))) {
+            this.onSelectionChange?.execute();
+            return;
+        }
     }
 }
 
@@ -104,9 +161,8 @@ export function useSelectionHelper(
     selection: SelectionSingleValue | SelectionMultiValue | undefined,
     dataSource: ListValue,
     onSelectionChange: ActionValue | undefined,
-    onDoSelect: ListActionValue | undefined,
-    onUnSelect: ListActionValue | undefined,
-    batch?: number
+    newTrialSwitch: boolean,
+    historyVersion?: EditableValue<Big>
 ): SelectionHelper | undefined {
     const firstLoadDone = useRef(false);
     useEffect(() => {
@@ -133,13 +189,17 @@ export function useSelectionHelper(
             if (!selectionHelper.current) {
                 selectionHelper.current = new MultiSelectionHelper(
                     selection,
+                    onSelectionChange,
                     dataSource.items ?? [],
-                    onDoSelect,
-                    onUnSelect,
-                    batch
+                    newTrialSwitch,
+                    historyVersion
                 );
             } else {
-                (selectionHelper.current as MultiSelectionHelper).updateProps(selection, dataSource.items ?? [], batch);
+                (selectionHelper.current as MultiSelectionHelper).updateProps(
+                    selection,
+                    dataSource.items ?? [],
+                    historyVersion
+                );
             }
         }
     }

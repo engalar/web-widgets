@@ -7,20 +7,17 @@
     <helpUrl>https://docs.mendix.com/appstore/modules/data-grid-2</helpUrl>
     <properties>
         <propertyGroup caption="NewTrial">
-            <property key="batch" type="attribute" required="false">
-                <caption>Batch</caption>
-                <description>多选时用来重置选中状态，只能递增</description>
+            <!-- boolean switch -->
+            <property key="newTrialSwitch" type="boolean" defaultValue="false">
+                <caption>NewTrial 开关</caption>
+                <description />
+            </property>
+            <property key="historyVersion" type="attribute" required="false">
+                <caption>选择历史</caption>
+                <description>0:重置；正数：新选择；负数：取消选择；</description>
                 <attributeTypes>
                     <attributeType name="Integer" />
                 </attributeTypes>
-            </property>
-            <property key="onSelect" type="action" required="false" dataSource="datasource">
-                <caption>On Select</caption>
-                <description />
-            </property>
-            <property key="onUnSelect" type="action" required="false" dataSource="datasource">
-                <caption>On UnSelect</caption>
-                <description />
             </property>
         </propertyGroup>
         <propertyGroup caption="General">
