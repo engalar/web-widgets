@@ -71,6 +71,15 @@ export default function Datagrid(props: DatagridContainerProps): ReactElement {
         isInfiniteLoad ? props.datasource.limit / pageSize! : props.datasource.offset / pageSize!
     );
 
+    // update currentPage
+    useEffect(() => {
+        if (isInfiniteLoad) {
+            setCurrentPage(props.datasource.offset / pageSize!);
+        } else {
+            setCurrentPage(props.datasource.offset / pageSize!);
+        }
+    }, [props.datasource, pageSize, isInfiniteLoad]);
+
     const setPage = useCallback(
         (computePage, pageSize2) => {
             const newPage = computePage(currentPage);
