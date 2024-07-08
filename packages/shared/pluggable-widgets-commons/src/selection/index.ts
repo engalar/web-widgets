@@ -54,7 +54,11 @@ class MultiSelectionHelper {
 
         if (this.newTrialSwitch) {
             // when enable new trial and historyVersion is 0, clear cross-page selection
-            if (this.historyVersion!.status === ValueStatus.Available && this.historyVersion!.value?.toNumber() === 0) {
+            if (
+                this.historyVersion &&
+                this.historyVersion.status === ValueStatus.Available &&
+                this.historyVersion.value?.toNumber() === 0
+            ) {
                 this.mergeSelectedItems.clear();
             }
             return;
