@@ -28,7 +28,8 @@
   },
   "packagePath": "com.mendix.widget.web",
   "scripts": {
-    "vite": "vite",
+    "vite:start": "vite --config node_modules/@engalar/vite-plugin-mendix/config/_vite_config.js",
+    "vite:build": "set __DEV_VITEJS__=true && npm run build",
     "start": "pluggable-widgets-tools start:server",
     "dev": "pluggable-widgets-tools start:ts",
     "build": "pluggable-widgets-tools build:ts",
@@ -49,12 +50,12 @@
     "ahooks": "^3.8.0"
   },
   "devDependencies": {
-    "@engalar/vite-plugin-mendix": "^1.3.6",
+    "@engalar/vite-plugin-mendix": "^2.0.2",
     "vite": "^5.2.11",
     "@mendix-internal/automation-utils": "workspace:*",
     "@mendix/eslint-config-web-widgets": "workspace:*",
     "@mendix/pluggable-test-utils": "workspace:*",
-    "@mendix/pluggable-widgets-tools": "^9.23.2",
+    "@mendix/pluggable-widgets-tools": "~10.7.2",
     "@mendix/prettier-config-web-widgets": "workspace:*",
     "@testing-library/dom": "^8.20.0",
     "@testing-library/jest-dom": "^5.16.5",

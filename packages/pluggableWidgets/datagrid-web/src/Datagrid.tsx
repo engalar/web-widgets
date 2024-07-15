@@ -46,12 +46,6 @@ export default function Datagrid(props: DatagridContainerProps): ReactElement {
         defaultValue: props.pageSize,
         listenStorageChange: true
     });
-    useEffect(() => {
-        props.datasource.requestTotalCount(true);
-        if (props.datasource.limit === Number.POSITIVE_INFINITY) {
-            props.datasource.setLimit(pageSize);
-        }
-    }, [props.datasource, pageSize]);
 
     useEffect(() => {
         if (props.datasource.filter && !filtered && !viewStateFilters.current) {
@@ -70,8 +64,19 @@ export default function Datagrid(props: DatagridContainerProps): ReactElement {
     const [currentPage, setCurrentPage] = useState(() =>
         isInfiniteLoad ? props.datasource.limit / pageSize! : props.datasource.offset / pageSize!
     );
-
     const [offset, setOffset] = useState(0);
+
+    useEffect(() => {
+        props.datasource.requestTotalCount(true);
+        if (props.datasource.limit === Number.POSITIVE_INFINITY) {
+            props.datasource.setLimit(pageSize);
+        }
+        if (!isInfiniteLoad) {
+            console.log("Setting offset ", props.datasource.offset, " pageSize ", pageSize);
+
+            setOffset(props.datasource.offset);
+        }
+    }, [props.datasource, pageSize]);
 
     // update currentPage
     useEffect(() => {
@@ -160,7 +165,6 @@ export default function Datagrid(props: DatagridContainerProps): ReactElement {
     );
     const selectActionProps = useOnSelectProps(selection);
     const { selectionStatus, selectionMethod } = selectionSettings(props, selection);
-
     return (
         <Table
             selectionStatus={selectionStatus}
