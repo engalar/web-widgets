@@ -20,8 +20,8 @@ import "./ui/Datagrid.scss";
 
 function getIdFromClass(clazz: string) {
     const className2 = clazz || "";
-    let pattern = /mx-name-(\w+)/;
-    let match = className2.match(pattern);
+    const pattern = /mx-name-(\w+)/;
+    const match = className2.match(pattern);
     let extracted;
     if (match) {
         extracted = match[1];
@@ -64,17 +64,11 @@ export default function Datagrid(props: DatagridContainerProps): ReactElement {
     const [currentPage, setCurrentPage] = useState(() =>
         isInfiniteLoad ? props.datasource.limit / pageSize! : props.datasource.offset / pageSize!
     );
-    const [offset, setOffset] = useState(0);
 
     useEffect(() => {
         props.datasource.requestTotalCount(true);
         if (props.datasource.limit === Number.POSITIVE_INFINITY) {
             props.datasource.setLimit(pageSize);
-        }
-        if (!isInfiniteLoad) {
-            console.log("Setting offset ", props.datasource.offset, " pageSize ", pageSize);
-
-            setOffset(props.datasource.offset);
         }
     }, [props.datasource, pageSize]);
 
@@ -99,7 +93,6 @@ export default function Datagrid(props: DatagridContainerProps): ReactElement {
                 props.datasource.setLimit(newPage * (newPageSize ?? pageSize));
             } else {
                 props.datasource.setOffset(newPage * (newPageSize ?? pageSize));
-                setOffset(newPage * (newPageSize ?? pageSize));
                 props.datasource.setLimit(newPageSize ?? pageSize);
             }
         },
