@@ -80,28 +80,30 @@ export default function Datagrid(props: DatagridContainerProps): ReactElement {
 
     // update currentPage
     useEffect(() => {
-        if (isInfiniteLoad) {
-            setCurrentPage(offset / pageSize!);
-        } else {
-            setCurrentPage(offset / pageSize!);
+        const p = props.datasource.offset / props.datasource.limit;
+        setCurrentPage(p);
+        if (props.datasource.limit !== Number.POSITIVE_INFINITY) {
+            setPageSize(props.datasource.limit);
         }
-    }, [props.datasource, pageSize, isInfiniteLoad, offset]);
+    }, [props.datasource]);
 
     const setPage = useCallback(
-        (computePage, pageSize2) => {
-            const newPage = computePage(currentPage);
-            setPageSize(pageSize2);
+        (computePage, newPageSize) => {
+            const oldPage = currentPage;
+            let newPage = computePage(oldPage);
+            if (pageSize !== newPageSize) {
+                newPage = 0;
+            }
 
-            setCurrentPage(newPage);
             if (isInfiniteLoad) {
-                props.datasource.setLimit(newPage * (pageSize2 ?? pageSize));
+                props.datasource.setLimit(newPage * (newPageSize ?? pageSize));
             } else {
-                props.datasource.setOffset(newPage * (pageSize2 ?? pageSize));
-                setOffset(newPage * (pageSize2 ?? pageSize));
-                props.datasource.setLimit(pageSize2 ?? pageSize);
+                props.datasource.setOffset(newPage * (newPageSize ?? pageSize));
+                setOffset(newPage * (newPageSize ?? pageSize));
+                props.datasource.setLimit(newPageSize ?? pageSize);
             }
         },
-        [props.datasource, pageSize, isInfiniteLoad, currentPage, setPageSize]
+        [props.datasource, pageSize, isInfiniteLoad, currentPage]
     );
 
     // TODO: Rewrite this logic with single useReducer (or write

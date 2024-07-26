@@ -253,7 +253,7 @@ export function Table<T extends ObjectItem>(props: TableProps<T>): ReactElement 
         <Pagination
             canNextPage={hasMoreItems}
             canPreviousPage={page !== 0}
-            gotoPage={(page: number, pageSize: number) => setPage && setPage(() => page, pageSize)}
+            gotoPage={(newPage: number, newPageSize: number) => setPage && setPage(() => newPage, newPageSize)}
             nextPage={() => setPage && setPage(prev => prev + 1, pageSize)}
             numberOfItems={numberOfItems}
             page={page}

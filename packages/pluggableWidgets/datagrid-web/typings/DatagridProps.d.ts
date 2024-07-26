@@ -52,13 +52,13 @@ export interface FilterListType {
 export interface ColumnsPreviewType {
     showContentAs: ShowContentAsEnum;
     attribute: string;
-    content: { widgetCount: number; renderer: ComponentType<{ caption?: string }> };
+    content: { widgetCount: number; renderer: ComponentType<{ children: ReactNode; caption?: string }> };
     dynamicText: string;
     header: string;
     tooltip: string;
-    filter: { widgetCount: number; renderer: ComponentType<{ caption?: string }> };
+    filter: { widgetCount: number; renderer: ComponentType<{ children: ReactNode; caption?: string }> };
     filterAssociation: string;
-    filterAssociationOptions: {} | { type: string } | null;
+    filterAssociationOptions: {} | { caption: string } | { type: string } | null;
     filterAssociationOptionLabel: string;
     sortable: boolean;
     resizable: boolean;
@@ -120,7 +120,7 @@ export interface DatagridPreviewProps {
     newTrialSwitch: boolean;
     historyVersion: string;
     advanced: boolean;
-    datasource: {} | { type: string } | null;
+    datasource: {} | { caption: string } | { type: string } | null;
     refreshInterval: number | null;
     itemSelection: "None" | "Single" | "Multi";
     itemSelectionMethod: ItemSelectionMethodEnum;
@@ -131,7 +131,7 @@ export interface DatagridPreviewProps {
     pagination: PaginationEnum;
     pagingPosition: PagingPositionEnum;
     showEmptyPlaceholder: ShowEmptyPlaceholderEnum;
-    emptyPlaceholder: { widgetCount: number; renderer: ComponentType<{ caption?: string }> };
+    emptyPlaceholder: { widgetCount: number; renderer: ComponentType<{ children: ReactNode; caption?: string }> };
     rowClass: string;
     onClick: {} | null;
     onSelectionChange: {} | null;
@@ -142,6 +142,6 @@ export interface DatagridPreviewProps {
     configurationAttribute: string;
     onConfigurationChange: {} | null;
     filterList: FilterListPreviewType[];
-    filtersPlaceholder: { widgetCount: number; renderer: ComponentType<{ caption?: string }> };
+    filtersPlaceholder: { widgetCount: number; renderer: ComponentType<{ children: ReactNode; caption?: string }> };
     filterSectionTitle: string;
 }
