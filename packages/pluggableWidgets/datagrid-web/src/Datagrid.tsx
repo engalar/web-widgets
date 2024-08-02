@@ -42,10 +42,11 @@ export default function Datagrid(props: DatagridContainerProps): ReactElement {
     const { FilterContext } = useFilterContext();
     const cellRenderer = useCellRenderer({ columns: props.columns, onClick: props.onClick });
 
-    const [pageSize, setPageSize] = useLocalStorageState(`DataGrid2-${getIdFromClass(props.class)}-pageSize`, {
+    const [pageSize2, setPageSize] = useLocalStorageState(`DataGrid2-${getIdFromClass(props.class)}-pageSize`, {
         defaultValue: props.pageSize,
         listenStorageChange: true
     });
+    const pageSize = pageSize2 !== undefined && pageSize2 > 0 ? pageSize2 : props.pageSize;
 
     useEffect(() => {
         if (props.datasource.filter && !filtered && !viewStateFilters.current) {
